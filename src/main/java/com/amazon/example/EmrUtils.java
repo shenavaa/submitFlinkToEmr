@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
@@ -22,7 +24,7 @@ public class EmrUtils {
 	
 	static private AmazonElasticMapReduce initEmrUtils() {
 		try {
-			credentials_profile = new ProfileCredentialsProvider("default").getCredentials();
+			credentials_profile = new DefaultAWSCredentialsProviderChain().getCredentials();
 	    } catch (Exception e) {
 	        throw new AmazonClientException(
 	                "Cannot load credentials from .aws/credentials file. " +
