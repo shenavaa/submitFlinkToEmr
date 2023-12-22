@@ -40,7 +40,7 @@ public class YarnUtils {
 				try {
 					DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
 					
-					if (!entity.getContentType().equals(ContentType.APPLICATION_XML)) {
+					if (!entity.getContentType().equals(ContentType.TEXT_XML)) {
 						throw new ClientProtocolException("Unexpected content type:" + entity.getContentType());
 					}
 
