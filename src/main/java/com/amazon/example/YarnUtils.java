@@ -69,8 +69,15 @@ public class YarnUtils {
 		this.rmPrivateNames = emr.getMastersPrivateNames();
 
 	}
+	
+	protected String getRMProxy() {
+		Document yarnConfig = this.getRMconfig();
+		yarnConfig.getDocumentElement().normalize();
 
-	protected String getRMconfig() {
+        return "Root element: " + yarnConfig.getDocumentElement().getNodeName();
+	}
+
+	protected Document getRMconfig() {
 		Document result = null;
 		try {
 			result = Request.get("http://" + rmPrivateNames.get(0) + ":8088/conf").execute()
@@ -80,7 +87,7 @@ public class YarnUtils {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return result.getTextContent();
+		return result;
 
 	}
 }

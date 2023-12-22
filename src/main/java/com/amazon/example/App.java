@@ -14,6 +14,6 @@ public class App
         YarnUtils yarn = new YarnUtils();
         
         
-        System.out.println(yarn.getRMconfig());
+        System.out.println(yarn.getRMProxy());
     }
 }
