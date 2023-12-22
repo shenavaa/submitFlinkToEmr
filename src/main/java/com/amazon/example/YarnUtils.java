@@ -14,8 +14,8 @@ import org.apache.hc.client5.http.ClientProtocolException;
 import org.apache.hc.client5.http.HttpResponseException;
 import org.apache.hc.client5.http.fluent.Request;
 import org.apache.hc.core5.http.ClassicHttpResponse;
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.ContentType;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.http.protocol.HTTP;
@@ -28,7 +28,7 @@ public class YarnUtils {
 		public T handleResponse(ClassicHttpResponse response) throws HttpException, IOException {
 			{
 				int statusLine = response.getCode();
-				HttpEntity entity = (HttpEntity) response.getEntity();
+				HttpEntity entity =  response.getEntity();
 				if (statusLine >= 300) {
 					throw new HttpResponseException(statusLine, response.getReasonPhrase());
 				}
@@ -39,14 +39,11 @@ public class YarnUtils {
 				DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
 				try {
 					DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
-					ContentType contentType = ContentType.getOrDefault(entity);
-					if (!contentType.equals(ContentType.APPLICATION_XML)) {
-						throw new ClientProtocolException("Unexpected content type:" + contentType);
+					
+					if (!entity.getContentType().equals(ContentType.APPLICATION_XML)) {
+						throw new ClientProtocolException("Unexpected content type:" + entity.getContentType());
 					}
-					Charset charset = contentType.getCharset();
-					if (charset == null) {
-						charset = HTTP.DEF_CONTENT_CHARSET;
-					}
+
 					return (T) docBuilder.parse(entity.getContent());
 				} catch (ParserConfigurationException ex) {
 					throw new IllegalStateException(ex);
