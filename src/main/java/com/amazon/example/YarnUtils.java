@@ -38,7 +38,7 @@ public class YarnUtils {
 
 				DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
 				try {
-					DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
+				DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
 					
 					/*
 					String cType = entity.getContentType();
@@ -52,8 +52,10 @@ public class YarnUtils {
 					 */
 					return (T) docBuilder.parse(entity.getContent());
 				} catch (ParserConfigurationException ex) {
+					ex.printStackTrace();
 					throw new IllegalStateException(ex);
 				} catch (SAXException ex) {
+					ex.printStackTrace();
 					throw new ClientProtocolException("Malformed XML document", ex);
 				}
 			}
