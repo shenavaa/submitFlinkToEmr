@@ -23,9 +23,9 @@ import org.xml.sax.SAXException;
 
 public class YarnUtils {
 
-	class myHandlerClass<T> implements HttpClientResponseHandler<T> {
+	class myHandlerClass<T> implements HttpClientResponseHandler<Document> {
 		@Override
-		public T handleResponse(ClassicHttpResponse response) throws HttpException, IOException {
+		public Document handleResponse(ClassicHttpResponse response) throws HttpException, IOException {
 			{
 				int statusLine = response.getCode();
 				HttpEntity entity =  response.getEntity();
@@ -50,7 +50,7 @@ public class YarnUtils {
 						throw new ClientProtocolException("Unexpected content type:" + entity.getContentType());
 					}
 					 */
-					return (T) docBuilder.parse(entity.getContent());
+					return docBuilder.parse(entity.getContent());
 				} catch (ParserConfigurationException ex) {
 					ex.printStackTrace();
 					throw new IllegalStateException(ex);
