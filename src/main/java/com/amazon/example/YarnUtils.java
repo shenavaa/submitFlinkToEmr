@@ -1,31 +1,81 @@
 package com.amazon.example;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 
-import org.apache.hc.client5.http.fluent.Content;
+import org.w3c.dom.Document;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.hc.client5.http.ClientProtocolException;
+import org.apache.hc.client5.http.HttpResponseException;
 import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.http.HttpEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.io.HttpClientResponseHandler;
+import org.apache.http.protocol.HTTP;
+import org.xml.sax.SAXException;
 
 public class YarnUtils {
-	private List<String> rmPrivateNames=null;
-	private EmrUtils emr = new EmrUtils();
-	
-	public YarnUtils() {
-		this.rmPrivateNames=emr.getMastersPrivateNames();
-		
-		
+
+	class myHandlerClass<T> implements HttpClientResponseHandler<T> {
+		@Override
+		public T handleResponse(ClassicHttpResponse response) throws HttpException, IOException {
+			{
+				int statusLine = response.getCode();
+				HttpEntity entity = (HttpEntity) response.getEntity();
+				if (statusLine >= 300) {
+					throw new HttpResponseException(statusLine, response.getReasonPhrase());
+				}
+				if (entity == null) {
+					throw new ClientProtocolException("Response contains no content");
+				}
+
+				DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
+				try {
+					DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
+					ContentType contentType = ContentType.getOrDefault(entity);
+					if (!contentType.equals(ContentType.APPLICATION_XML)) {
+						throw new ClientProtocolException("Unexpected content type:" + contentType);
+					}
+					Charset charset = contentType.getCharset();
+					if (charset == null) {
+						charset = HTTP.DEF_CONTENT_CHARSET;
+					}
+					return (T) docBuilder.parse(entity.getContent());
+				} catch (ParserConfigurationException ex) {
+					throw new IllegalStateException(ex);
+				} catch (SAXException ex) {
+					throw new ClientProtocolException("Malformed XML document", ex);
+				}
+			}
+		}
 	}
-		
-	
+
+	private List<String> rmPrivateNames = null;
+	private EmrUtils emr = new EmrUtils();
+
+	public YarnUtils() {
+		this.rmPrivateNames = emr.getMastersPrivateNames();
+
+	}
+
 	protected String getRMconfig() {
-		Content result =null;
+		Document result = null;
 		try {
-			 result = Request.get("http://" + rmPrivateNames.get(0) + ":8088/conf").execute().returnContent();
+			result = Request.get("http://" + rmPrivateNames.get(0) + ":8088/conf").execute()
+					.handleResponse(new myHandlerClass<Document>());
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return result.asString();
-	
+		return result.getTextContent();
+
 	}
 }
