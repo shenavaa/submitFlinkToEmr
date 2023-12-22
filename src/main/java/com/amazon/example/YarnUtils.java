@@ -40,7 +40,7 @@ public class YarnUtils {
 				try {
 					DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
 					
-					
+					/*
 					String cType = entity.getContentType();
 					String cSet = entity.getContentEncoding();
 					
@@ -49,7 +49,7 @@ public class YarnUtils {
 					if (!cEntity.equals(ContentType.TEXT_XML)) {
 						throw new ClientProtocolException("Unexpected content type:" + entity.getContentType());
 					}
-
+					 */
 					return (T) docBuilder.parse(entity.getContent());
 				} catch (ParserConfigurationException ex) {
 					throw new IllegalStateException(ex);
