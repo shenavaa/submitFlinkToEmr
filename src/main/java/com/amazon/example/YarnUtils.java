@@ -116,7 +116,11 @@ public class YarnUtils {
 						app.setEndTime(getRMProxy());
 						app.setStartTime((String)a.get("startedTime"));
 						app.setEndTime((String)a.get("finishedTime"));
-						
+						app.setAmHostHttpAddress((String)a.get("amHostHttpAddress"));
+						app.setId((String)a.get("id"));
+						app.setUser((String)a.get("user"));
+						app.setAmRPCAddress((String)a.get("amRPCAddress"));
+												
 						resultList.add(app);
 					}
 					return resultList;
@@ -184,7 +188,7 @@ public class YarnUtils {
 		return YarnUtils.yarnConfigMap;
 	}
 	
-	public List<YarnApp> QueryApplications() {
+	public List<YarnApp> queryApplications() {
 		
 		List<YarnApp> result = null;
 		try {

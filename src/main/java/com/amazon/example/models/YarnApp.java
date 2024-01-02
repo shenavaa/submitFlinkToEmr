@@ -8,6 +8,11 @@ public class YarnApp {
 	private String endTime;
 	private String applicationType;
 	private String applicationTags;
+	private String id;
+	private String amHostHttpAddress;
+	private String user;
+	private String amRPCAddress;
+	
 	public String getName() {
 		return name;
 	}
@@ -49,6 +54,30 @@ public class YarnApp {
 	}
 	public void setApplicationTags(String applicationTags) {
 		this.applicationTags = applicationTags;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public String getAmHostHttpAddress() {
+		return amHostHttpAddress;
+	}
+	public void setAmHostHttpAddress(String amHostHttpAddress) {
+		this.amHostHttpAddress = amHostHttpAddress;
+	}
+	public String getUser() {
+		return user;
+	}
+	public void setUser(String user) {
+		this.user = user;
+	}
+	public String getAmRPCAddress() {
+		return amRPCAddress;
+	}
+	public void setAmRPCAddress(String amRPCAddress) {
+		this.amRPCAddress = amRPCAddress;
 	}
 	
 
