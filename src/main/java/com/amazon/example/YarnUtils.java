@@ -120,6 +120,7 @@ public class YarnUtils {
 						app.setId((String)a.get("id"));
 						app.setUser((String)a.get("user"));
 						app.setAmRPCAddress((String)a.get("amRPCAddress"));
+						app.setTrackingUrl((String)a.get("trackingUrl"));
 												
 						resultList.add(app);
 					}
