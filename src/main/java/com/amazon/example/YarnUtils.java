@@ -130,7 +130,7 @@ public class YarnUtils {
 				} catch (ParseException e) {
 					
 					e.printStackTrace();
-					throw new ClientProtocolException("Malformed XML document", e);
+					throw new ClientProtocolException("Malformed Json document", e);
 				}
 			}
 		}
