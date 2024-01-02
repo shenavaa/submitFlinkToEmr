@@ -1,9 +1,11 @@
 package com.amazon.example;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+
 import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -19,25 +21,34 @@ import org.apache.hc.client5.http.HttpResponseException;
 import org.apache.hc.client5.http.fluent.Request;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.ContentType;
+
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
-import org.apache.http.protocol.HTTP;
+
 import org.xml.sax.SAXException;
+
+import com.amazon.example.models.YarnApp;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.json.simple.JSONArray;
+
 
 
 public class YarnUtils {
 	private Logger logger = LoggerFactory.getLogger(YarnUtils.class);
 
-	class myHandlerClass<T> implements HttpClientResponseHandler<Document> {
+	class XmlHandlerClass<T> implements HttpClientResponseHandler<Document> {
 		@Override
 		public Document handleResponse(ClassicHttpResponse response) throws HttpException, IOException {
 			{
 				int statusLine = response.getCode();
-				HttpEntity entity =  response.getEntity();
+				HttpEntity entity = response.getEntity();
 				if (statusLine >= 300) {
 					throw new HttpResponseException(statusLine, response.getReasonPhrase());
 				}
@@ -47,17 +58,17 @@ public class YarnUtils {
 
 				DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
 				try {
-				DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
-					
+					DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
+
 					/*
-					String cType = entity.getContentType();
-					String cSet = entity.getContentEncoding();
-					
-					ContentType cEntity =  ContentType.create(cType,cSet);
-					
-					if (!cEntity.equals(ContentType.TEXT_XML)) {
-						throw new ClientProtocolException("Unexpected content type:" + entity.getContentType());
-					}
+					 * String cType = entity.getContentType(); String cSet =
+					 * entity.getContentEncoding();
+					 * 
+					 * ContentType cEntity = ContentType.create(cType,cSet);
+					 * 
+					 * if (!cEntity.equals(ContentType.TEXT_XML)) { throw new
+					 * ClientProtocolException("Unexpected content type:" +
+					 * entity.getContentType()); }
 					 */
 					return docBuilder.parse(entity.getContent());
 				} catch (ParserConfigurationException ex) {
@@ -70,56 +81,121 @@ public class YarnUtils {
 			}
 		}
 	}
+	
+	class JsonHandlerClass<T> implements HttpClientResponseHandler<List> {
+		@Override
+		public List<YarnApp> handleResponse(ClassicHttpResponse response) throws HttpException, IOException {
+			{
+				ArrayList<YarnApp> resultList = new ArrayList<YarnApp>();
+				int statusLine = response.getCode();
+				HttpEntity entity = response.getEntity();
+				if (statusLine >= 300) {
+					throw new HttpResponseException(statusLine, response.getReasonPhrase());
+				}
+				if (entity == null) {
+					throw new ClientProtocolException("Response contains no content");
+				}
+
+				try {
+					JSONParser parser = new JSONParser();
+					Object jsonObj = parser.parse(entity.getContent().toString());
+					
+					JSONObject jsonObject = (JSONObject) jsonObj;
+					JSONObject appObject = (JSONObject)jsonObject.get("apps");
+					JSONArray apps = (JSONArray)appObject.get("app");
+										
+					Iterator<String> it = apps.iterator();
+					while (it.hasNext()) {
+						YarnApp app = new YarnApp();
+						JSONObject a = (JSONObject) parser.parse(it.next());
+					
+						app.setName((String)a.get("name"));
+						app.setState((String)a.get("state"));
+						app.setApplicationTags((String)a.get("applicationTags"));
+						app.setApplicationType((String)a.get("ApplicationTypes"));
+						app.setEndTime(getRMProxy());
+						app.setStartTime((String)a.get("startedTime"));
+						app.setEndTime((String)a.get("finishedTime"));
+						
+						resultList.add(app);
+					}
+					return resultList;
+				} catch (UnsupportedOperationException e) {
+					e.printStackTrace();
+					throw new IllegalStateException(e);
+				} catch (ParseException e) {
+					
+					e.printStackTrace();
+					throw new ClientProtocolException("Malformed XML document", e);
+				}
+			}
+		}
+	}
 
 	private List<String> rmPrivateNames = null;
 	private EmrUtils emr = new EmrUtils();
-	private static HashMap<String,String> yarnConfigMap = null;
+	private static HashMap<String, String> yarnConfigMap = null;
 
 	public YarnUtils() {
 		this.rmPrivateNames = emr.getMastersPrivateNames();
 
 	}
-	
+
 	protected String getRMProxy() {
-		HashMap<String,String> yarnConfig = this.getRMconfig();
-        	return yarnConfig.get("yarn.web-proxy.address");
+		HashMap<String, String> yarnConfig = this.getRMconfig();
+		return yarnConfig.get("yarn.web-proxy.address");
 	}
 
-	protected HashMap<String,String> getRMconfig() {
-		if (YarnUtils.yarnConfigMap == null){
+	protected HashMap<String, String> getRMconfig() {
+		if (YarnUtils.yarnConfigMap == null) {
 			Document result = null;
-				try {
-					result = Request.get("http://" + rmPrivateNames.get(0) + ":8088/conf").execute()
-						.handleResponse(new myHandlerClass<Document>());
+			try {
+				result = Request.get("http://" + rmPrivateNames.get(0) + ":8088/conf").execute()
+						.handleResponse(new XmlHandlerClass<Document>());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
 			result.getDocumentElement().normalize();
-        	        NodeList nList = result.getElementsByTagName("property");
+			NodeList nList = result.getElementsByTagName("property");
 
-	                for (int i = 0; i < nList.getLength(); i++) {
-                	        Node nNode = nList.item(i);
-                        	if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-                                	Element elem = (Element) nNode;
-                                	Node node1 = elem.getElementsByTagName("source").item(0);
-                                	String src = node1.getTextContent();
+			for (int i = 0; i < nList.getLength(); i++) {
+				Node nNode = nList.item(i);
+				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+					Element elem = (Element) nNode;
+					Node node1 = elem.getElementsByTagName("source").item(0);
+					String src = node1.getTextContent();
 
-                                	if (src.equals("yarn-site.xml") || src.equals("yarn-default.xml")){
-                                        	Node node2 = elem.getElementsByTagName("name").item(0);
-                                        	String name = node2.getTextContent();
-                                        	Node node3 = elem.getElementsByTagName("value").item(0);
-                                        	String value = node3.getTextContent();
+					if (src.equals("yarn-site.xml") || src.equals("yarn-default.xml")) {
+						Node node2 = elem.getElementsByTagName("name").item(0);
+						String name = node2.getTextContent();
+						Node node3 = elem.getElementsByTagName("value").item(0);
+						String value = node3.getTextContent();
 						if (YarnUtils.yarnConfigMap == null) {
-							YarnUtils.yarnConfigMap = new HashMap<String,String>();
+							YarnUtils.yarnConfigMap = new HashMap<String, String>();
 						}
-						YarnUtils.yarnConfigMap.put(name,value);
-                                        	logger.info(src + " : " + name + " : " + value );
-                                	}
-                        	}
-                	}
+						YarnUtils.yarnConfigMap.put(name, value);
+						logger.info(src + " : " + name + " : " + value);
+					}
+				}
+			}
 		}
 		return YarnUtils.yarnConfigMap;
 	}
+	
+	public List<YarnApp> QueryApplications() {
+		
+		List<YarnApp> result = null;
+		try {
+			result = Request.get("http://" + rmPrivateNames.get(0) + ":8088/ws/v1/cluster/apps").execute()
+					.handleResponse(new JsonHandlerClass<List<YarnApp>>());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	return result;
+	}
+	
 }
