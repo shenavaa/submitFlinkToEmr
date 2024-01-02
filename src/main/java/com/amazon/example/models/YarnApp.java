@@ -4,8 +4,8 @@ public class YarnApp {
 	private String name;
 	private String trackingUrl;
 	private String state;
-	private String startTime;
-	private String endTime;
+	private Long startTime;
+	private Long endTime;
 	private String applicationType;
 	private String applicationTags;
 	private String id;
@@ -31,16 +31,16 @@ public class YarnApp {
 	public void setState(String state) {
 		this.state = state;
 	}
-	public String getStartTime() {
+	public Long getStartTime() {
 		return startTime;
 	}
-	public void setStartTime(String startTime) {
+	public void setStartTime(Long startTime) {
 		this.startTime = startTime;
 	}
-	public String getEndTime() {
+	public Long getEndTime() {
 		return endTime;
 	}
-	public void setEndTime(String endTime) {
+	public void setEndTime(Long endTime) {
 		this.endTime = endTime;
 	}
 	public String getApplicationType() {

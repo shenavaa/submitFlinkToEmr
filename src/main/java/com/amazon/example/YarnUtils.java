@@ -1,6 +1,7 @@
 package com.amazon.example;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -98,24 +99,23 @@ public class YarnUtils {
 
 				try {
 					JSONParser parser = new JSONParser();
-					Object jsonObj = parser.parse(entity.getContent().toString());
+					Object jsonObj = parser.parse(new InputStreamReader(entity.getContent()));
 					
 					JSONObject jsonObject = (JSONObject) jsonObj;
 					JSONObject appObject = (JSONObject)jsonObject.get("apps");
 					JSONArray apps = (JSONArray)appObject.get("app");
 										
-					Iterator<String> it = apps.iterator();
+					Iterator<JSONObject> it = apps.iterator();
 					while (it.hasNext()) {
 						YarnApp app = new YarnApp();
-						JSONObject a = (JSONObject) parser.parse(it.next());
+						JSONObject a = it.next();
 					
 						app.setName((String)a.get("name"));
 						app.setState((String)a.get("state"));
 						app.setApplicationTags((String)a.get("applicationTags"));
 						app.setApplicationType((String)a.get("ApplicationTypes"));
-						app.setEndTime(getRMProxy());
-						app.setStartTime((String)a.get("startedTime"));
-						app.setEndTime((String)a.get("finishedTime"));
+						app.setStartTime((Long)a.get("startedTime"));
+						app.setEndTime((Long)a.get("finishedTime"));
 						app.setAmHostHttpAddress((String)a.get("amHostHttpAddress"));
 						app.setId((String)a.get("id"));
 						app.setUser((String)a.get("user"));
